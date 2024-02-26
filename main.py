@@ -10,11 +10,16 @@ from pyglet import graphics
 from pyglet.gl import *
 from pyglet.math import Mat4
 import cProfile
+import pymunk
+
+
+space = pymunk.Space()
+space.gravity = (0, -981)  # Set the gravity; feel free to adjust to your game's needs
 
 
 # EACH MAP HAS TO BE 50 X 50 TILES
 
-scale_factor = 2  # Adjust this value to control the zoom level
+scale_factor = 2  # Adjust this value to control the camera zoom level
 
 resource_dir = os.path.join(os.path.dirname(__file__), 'resources')
 
