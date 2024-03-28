@@ -10,16 +10,11 @@ from pyglet import graphics
 from pyglet.gl import *
 from pyglet.math import Mat4
 import cProfile
-import pymunk
-
-
-space = pymunk.Space()
-space.gravity = (0, -981)  # Set the gravity; feel free to adjust to your game's needs
 
 
 # EACH MAP HAS TO BE 50 X 50 TILES
 
-scale_factor = 2  # Adjust this value to control the camera zoom level
+scale_factor = 2  # Adjust this value to control the zoom level
 
 resource_dir = os.path.join(os.path.dirname(__file__), 'resources')
 
@@ -62,19 +57,35 @@ spawn_batch = pyglet.graphics.Batch()
 
 @window.event
 def spawn_enemy(dt):
-    enemy_width = 100  # Replace with the actual width of your enemy sprite
-    enemy_height = 100  # Replace with the actual height of your enemy sprite
-    x = random.randint(0, window.width - enemy_width)  # Random x position within screen bounds
-    y = random.randint(0, window.height - enemy_height)  # Random y position within screen bounds
+    if not enemy_spawn_items:  # Ensure there are enemy spawn points
+        print("No enemy spawn points found.")
+        return
+
+    # Choose a random enemy spawn tile
+    spawn_tile = random.choice(enemy_spawn_items)
 
     # Determine which enemy type to spawn (50% chance for each)
     if random.random() < 0.5:
-        enemy = Enemy(x, y, player, window,walls_layer=hitbox_items)
+        enemy = Enemy(0, 0, player, window, walls_layer=hitbox_items)  # Temporarily spawn at (0, 0)
+        enemy_type = "Enemy"
     else:
-        enemy = Grumplord(x, y, player, window,walls_layer=hitbox_items)
+        enemy = Grumplord(0, 0, player, window, walls_layer=hitbox_items)  # Temporarily spawn at (0, 0)
+        enemy_type = "Grumplord"
 
-    enemy.enemy_sprite.x = x  # Set sprite's initial x position
-    enemy.enemy_sprite.y = y  # Set sprite's initial y position
+    # Use the sprite's dimensions for accurate positioning
+    enemy_width = enemy.enemy_sprite.width
+    enemy_height = enemy.enemy_sprite.height
+
+    # Calculate enemy's spawn position to center it within the tile
+    x = spawn_tile.x + (spawn_tile.width - enemy_width) / 2
+    y = spawn_tile.y + (spawn_tile.height - enemy_height) / 2
+
+    # Update the enemy's position
+    enemy.x, enemy.y = x, y
+    enemy.enemy_sprite.update(x=x, y=y)
+
+    print(f"Spawned {enemy_type} at ({x}, {y}) with size ({enemy_width}, {enemy_height})")
+
     enemies.append(enemy)
     pyglet.clock.schedule_interval(enemy.update, 1 / 60.0)  # Schedule enemy updates
 
@@ -169,11 +180,13 @@ def load_and_render_tiles():
 
     for layer in tmx_map.layers:
         if isinstance(layer, pytmx.TiledTileLayer):
+            print(f"Found layer: {layer.name}")
             tiles = list(layer.tiles())  # Convert the generator to a list
             for x, y, image in tiles:
                 tile_x = x * scaled_tile_width  # Scale the x position
                 tile_y = window.height - (y + 1) * scaled_tile_height  # Scale the y position
-
+                if layer.name.strip() == "EnemySpawn":
+                    print("hi")  #
                 if layer.name == "Floor":
                     batch = floor_batch
                     item_list = floor_items
@@ -186,12 +199,15 @@ def load_and_render_tiles():
                 elif layer.name == "PlayerSpawn":
                     batch = spawn_batch
                     item_list = spawn_items
-               
+                elif layer.name.strip() == "EnemySpawn":
+                    item_list = enemy_spawn_items   
+                
                 elif layer.name == "Hitboxes":
+                    print("I exists")
                     item_list = hitbox_items
 
-                elif layer == "EnemySpawn":
-                    item_list = enemy_spawn_items
+                
+
                 else:
                     # Handle any other layers if needed
                     continue
@@ -296,7 +312,8 @@ def on_draw():
     floor_batch.draw()
     walls_batch.draw()
     decoration_batch.draw()
-
+    #print(enemy_spawn_items)
+    
 
     # Render the player sprite without applying camera translation
     player.player_sprite.draw()  # Render the player sprite
