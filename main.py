@@ -84,7 +84,7 @@ def spawn_enemy(dt):
     enemy.x, enemy.y = x, y
     enemy.enemy_sprite.update(x=x, y=y)
 
-    print(f"Spawned {enemy_type} at ({x}, {y}) with size ({enemy_width}, {enemy_height})")
+    #print(f"Spawned {enemy_type} at ({x}, {y}) with size ({enemy_width}, {enemy_height})")
 
     enemies.append(enemy)
     pyglet.clock.schedule_interval(enemy.update, 1 / 60.0)  # Schedule enemy updates
@@ -185,8 +185,7 @@ def load_and_render_tiles():
             for x, y, image in tiles:
                 tile_x = x * scaled_tile_width  # Scale the x position
                 tile_y = window.height - (y + 1) * scaled_tile_height  # Scale the y position
-                if layer.name.strip() == "EnemySpawn":
-                    print("hi")  #
+                
                 if layer.name == "Floor":
                     batch = floor_batch
                     item_list = floor_items
@@ -203,7 +202,6 @@ def load_and_render_tiles():
                     item_list = enemy_spawn_items   
                 
                 elif layer.name == "Hitboxes":
-                    print("I exists")
                     item_list = hitbox_items
 
                 
